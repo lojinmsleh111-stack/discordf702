@@ -26,7 +26,7 @@ class Violations(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="اصدار_مخالفة", description="إصدار مخالفة")
+    @app_commands.command(name="mokhalfa", description="إصدار مخالفة")
     @app_commands.describe(
         العسكري="العسكري",
         المخالف="المخالف",
