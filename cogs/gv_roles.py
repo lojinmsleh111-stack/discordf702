@@ -1,3 +1,4 @@
+
 import discord
 from discord.ext import commands
 
@@ -16,10 +17,15 @@ from utils.config import (
 )
 
 
+OWNER_START_CHANNEL_ID = 1458141719265542355
+PLAY_START_CHANNEL_ID = 1458141041772204123
+
+
 class GvView(discord.ui.View):
     def __init__(self, bot):
         super().__init__(timeout=None)
         self.bot = bot
+        self.selected_roles = {}
 
     async def send_to_channels(self, interaction, channel_ids, content):
         sent = []
@@ -42,6 +48,8 @@ class GvView(discord.ui.View):
         custom_id="gv_owner"
     )
     async def owner(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.selected_roles[interaction.user.id] = "owner"
+
         emoji = f"<:gv:{GV_EMOJI_ID}>"
 
         rules_channel = interaction.guild.get_channel(GV_RULES_CHANNEL_ID)
@@ -81,6 +89,8 @@ class GvView(discord.ui.View):
         custom_id="gv_play"
     )
     async def play(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.selected_roles[interaction.user.id] = "play"
+
         emoji = f"<:gv:{GV_PLAY_EMOJI_ID}>"
 
         rules_channel = interaction.guild.get_channel(GV_RULES_CHANNEL_ID)
@@ -120,6 +130,21 @@ class GvView(discord.ui.View):
         custom_id="gv_start"
     )
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
+        selected_role = self.selected_roles.get(interaction.user.id)
+
+        if selected_role == "owner":
+            start_channel_id = OWNER_START_CHANNEL_ID
+
+        elif selected_role == "play":
+            start_channel_id = PLAY_START_CHANNEL_ID
+
+        else:
+            await interaction.response.send_message(
+                "اختر رول أونري أو رول بلاي GV أولاً.",
+                ephemeral=True
+            )
+            return
+
         text = (
             f"**__ بداية رولي ( {interaction.user.mention} )\n\n"
             "- رول بلاي gv\n\n"
@@ -130,7 +155,7 @@ class GvView(discord.ui.View):
             "__**"
         )
 
-        channel = interaction.guild.get_channel(1458141041772204123)
+        channel = interaction.guild.get_channel(start_channel_id)
 
         if channel:
             try:
