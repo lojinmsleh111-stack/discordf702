@@ -103,7 +103,7 @@ class Violations(commands.Cog):
             VIOLATION_CHANNEL_ID
         )
 
-        if not channel:
+        if channel is None:
             return await interaction.followup.send(
                 "لم أجد روم المخالفات.",
                 ephemeral=True
