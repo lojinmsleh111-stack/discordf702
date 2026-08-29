@@ -51,7 +51,7 @@ class Roles(commands.Cog):
 
         await interaction.response.send_message(text, ephemeral=True)
 
-    @app_commands.command(name="أعطاء_رتب", description="إعطاء حتى 20 رتبة لعضو")
+    @app_commands.command(name="give_roles", description="إعطاء حتى 20 رتبة لعضو")
     @app_commands.describe(
         العضو="العضو",
         الرتبة1="الرتبة 1",
@@ -89,7 +89,7 @@ class Roles(commands.Cog):
         selected = [roles[f"الرتبة{i}"] for i in range(1, 21)]
         await self._apply(interaction, العضو, selected, True)
 
-    @app_commands.command(name="ازالة_رتب", description="إزالة حتى 20 رتبة من عضو")
+    @app_commands.command(name="remove_roles", description="إزالة حتى 20 رتبة من عضو")
     @app_commands.describe(
         العضو="العضو",
         الرتبة1="الرتبة 1",
