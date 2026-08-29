@@ -70,24 +70,6 @@ class GvView(discord.ui.View):
             text
         )
 
-        start_text = (
-            f"**__ بداية رولي ( {interaction.user.mention} )\n\n"
-            "- رول بلاي gv\n\n"
-            "- السرعه 70 ميل بالكيلو 110\n\n"
-            "- تكتب اسمك هنا #𝐀𝐍〢🎗️〕أضافة・الهوست  و تضيف الهوست\n\n"
-            "- تخرب بلوك\n\n"
-            f"|| <@&{GV_NOTIFY_ROLE_ID}> ||\n\n"
-            "__**"
-        )
-
-        channel = interaction.guild.get_channel(1458141719265542355)
-
-        if channel:
-            try:
-                await channel.send(start_text)
-            except discord.HTTPException:
-                pass
-
         await interaction.response.send_message(
             "تم إرسال نموذج رول اونر.",
             ephemeral=True
