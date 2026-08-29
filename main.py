@@ -61,7 +61,7 @@ async def on_ready():
     print(f"Logged in as {bot.user} ({bot.user.id})")
     try:
         guild = discord.Object(id=1441189523689312307)
-synced = await bot.tree.sync(guild=guild)
+        synced = await bot.tree.sync(guild=guild)
         print(f"Synced {len(synced)} slash commands.")
     except Exception as e:
         print(f"Slash sync error: {e}")
