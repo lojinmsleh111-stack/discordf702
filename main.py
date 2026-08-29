@@ -1,3 +1,4 @@
+print("MAIN.PY IS RUNNING - TEST 123")
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
