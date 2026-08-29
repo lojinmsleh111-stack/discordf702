@@ -8,9 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# =========================
-# Web Server - Port 10000
-# =========================
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -36,15 +33,42 @@ def start_web_server():
 
 threading.Thread(target=start_web_server, daemon=True).start()
 
-# =========================
-# Discord Bot
-# =========================
 
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+
+class MyBot(commands.Bot):
+    async def setup_hook(self):
+        for cog in COGS:
+            try:
+                await self.load_extension(cog)
+                print(f"Loaded {cog}")
+            except Exception as e:
+                print(f"Failed to load {cog}: {e}")
+
+        try:
+            guild = discord.Object(id=1441189523689312307)
+
+            self.tree.copy_global_to(guild=guild)
+
+            synced = await self.tree.sync(guild=guild)
+
+            print(
+                f"Synced {len(synced)} slash commands "
+                f"to guild {guild.id}."
+            )
+
+        except Exception as e:
+            print(f"Slash sync error: {type(e).__name__}: {e}")
+
+
+bot = MyBot(
+    command_prefix="!",
+    intents=intents
+)
+
 
 COGS = [
     "cogs.activation",
@@ -62,24 +86,6 @@ async def on_ready():
 
 
 async def main():
-    for cog in COGS:
-        try:
-            await bot.load_extension(cog)
-            print(f"Loaded {cog}")
-        except Exception as e:
-            print(f"Failed to load {cog}: {e}")
-
-    try:
-        guild = discord.Object(id=1441189523689312307)
-
-        bot.tree.copy_global_to(guild=guild)
-
-        synced = await bot.tree.sync(guild=guild)
-
-        print(f"Synced {len(synced)} slash commands to guild {guild.id}.")
-    except Exception as e:
-        print(f"Slash sync error: {e}")
-
     token = os.getenv("TOKEN")
 
     if not token or token == "PUT_BOT_TOKEN_HERE":
@@ -90,4 +96,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())
