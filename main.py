@@ -10,7 +10,7 @@ load_dotenv()
 
 
 # =========================
-# Health Server
+# Render Health Check
 # =========================
 
 class HealthHandler(BaseHTTPRequestHandler):
@@ -32,7 +32,14 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 def start_web_server():
     port = int(os.getenv("PORT", 10000))
-    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+
+    server = HTTPServer(
+        ("0.0.0.0", port),
+        HealthHandler
+    )
+
+    print(f"Health server started on port {port}")
+
     server.serve_forever()
 
 
@@ -43,13 +50,18 @@ threading.Thread(
 
 
 # =========================
-# Bot
+# Discord Intents
 # =========================
 
 intents = discord.Intents.default()
+
 intents.members = True
 intents.message_content = True
 
+
+# =========================
+# Cogs
+# =========================
 
 COGS = [
     "cogs.activation",
@@ -60,6 +72,10 @@ COGS = [
     "cogs.code",
 ]
 
+
+# =========================
+# Bot
+# =========================
 
 class MyBot(commands.Bot):
 
@@ -72,7 +88,9 @@ class MyBot(commands.Bot):
             try:
                 await self.load_extension(cog)
 
-                print(f"LOADED: {cog}")
+                print(
+                    f"LOADED: {cog}"
+                )
 
             except Exception as e:
 
@@ -81,12 +99,15 @@ class MyBot(commands.Bot):
                     f"{type(e).__name__}: {e}"
                 )
 
-        print("========== COMMANDS BEFORE SYNC ==========")
+        print(
+            "========== COMMANDS BEFORE SYNC =========="
+        )
 
         commands_list = self.tree.get_commands()
 
         print(
-            f"TOTAL COMMANDS: {len(commands_list)}"
+            f"TOTAL COMMANDS: "
+            f"{len(commands_list)}"
         )
 
         for command in commands_list:
@@ -95,32 +116,35 @@ class MyBot(commands.Bot):
                 f"COMMAND FOUND: /{command.name}"
             )
 
-        print("========== STARTING GUILD SYNC ==========")
+        print(
+            "========== GUILD SYNC =========="
+        )
+
+        guild = discord.Object(
+            id=1441189523689312307
+        )
 
         try:
-
-            guild = discord.Object(
-                id=1441189523689312307
-            )
 
             synced = await self.tree.sync(
                 guild=guild
             )
 
             print(
-                f"SYNC SUCCESS: {len(synced)} commands"
+                f"SYNC SUCCESS: "
+                f"{len(synced)} commands"
             )
 
             for command in synced:
 
                 print(
-                    f"SYNCED COMMAND: /{command.name}"
+                    f"SYNCED: /{command.name}"
                 )
 
         except Exception as e:
 
             print(
-                "SYNC ERROR: "
+                f"SYNC ERROR: "
                 f"{type(e).__name__}: {e}"
             )
 
@@ -131,8 +155,16 @@ bot = MyBot(
 )
 
 
+# =========================
+# Ready
+# =========================
+
 @bot.event
 async def on_ready():
+
+    print(
+        "================================"
+    )
 
     print(
         f"BOT ONLINE: "
@@ -140,7 +172,7 @@ async def on_ready():
     )
 
     print(
-        "GUILD COUNT: "
+        f"CONNECTED GUILDS: "
         f"{len(bot.guilds)}"
     )
 
@@ -161,9 +193,13 @@ async def on_ready():
             "TARGET GUILD NOT FOUND"
         )
 
+    print(
+        "================================"
+    )
+
 
 # =========================
-# Start
+# Start Bot
 # =========================
 
 async def main():
@@ -175,6 +211,8 @@ async def main():
         raise RuntimeError(
             "TOKEN environment variable is missing"
         )
+
+    print("Starting Discord bot...")
 
     await bot.start(token)
 
