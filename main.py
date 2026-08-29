@@ -59,6 +59,16 @@ COGS = [
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} ({bot.user.id})")
+
+
+async def main():
+    for cog in COGS:
+        try:
+            await bot.load_extension(cog)
+            print(f"Loaded {cog}")
+        except Exception as e:
+            print(f"Failed to load {cog}: {e}")
+
     try:
         guild = discord.Object(id=1441189523689312307)
 
@@ -69,15 +79,6 @@ async def on_ready():
         print(f"Synced {len(synced)} slash commands to guild {guild.id}.")
     except Exception as e:
         print(f"Slash sync error: {e}")
-
-
-async def main():
-    for cog in COGS:
-        try:
-            await bot.load_extension(cog)
-            print(f"Loaded {cog}")
-        except Exception as e:
-            print(f"Failed to load {cog}: {e}")
 
     token = os.getenv("TOKEN")
 
