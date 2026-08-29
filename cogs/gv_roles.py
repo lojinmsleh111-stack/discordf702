@@ -36,17 +36,6 @@ class GvView(discord.ui.View):
 
         return sent
 
-    def start_role_text(self, interaction):
-        return (
-            f"**__ بداية رولي ( {interaction.user.mention} )\n\n"
-            "- رول بلاي gv\n\n"
-            "- السرعه 70 ميل بالكيلو 110\n\n"
-            "- تكتب اسمك هنا #𝐀𝐍〢🎗️〕أضافة・الهوست  و تضيف الهوست\n\n"
-            "- تخرب بلوك\n\n"
-            f"|| <@&{GV_NOTIFY_ROLE_ID}> ||\n\n"
-            "__**"
-        )
-
     @discord.ui.button(
         label="رول اونر",
         style=discord.ButtonStyle.primary,
@@ -81,16 +70,23 @@ class GvView(discord.ui.View):
             text
         )
 
-        start_text = self.start_role_text(interaction)
+        start_text = (
+            f"**__ بداية رولي ( {interaction.user.mention} )\n\n"
+            "- رول بلاي gv\n\n"
+            "- السرعه 70 ميل بالكيلو 110\n\n"
+            "- تكتب اسمك هنا #𝐀𝐍〢🎗️〕أضافة・الهوست  و تضيف الهوست\n\n"
+            "- تخرب بلوك\n\n"
+            f"|| <@&{GV_NOTIFY_ROLE_ID}> ||\n\n"
+            "__**"
+        )
 
-        for cid in GV_OWNER_CHANNELS:
-            channel = interaction.guild.get_channel(cid)
+        channel = interaction.guild.get_channel(1458141719265542355)
 
-            if channel:
-                try:
-                    await channel.send(start_text)
-                except discord.HTTPException:
-                    pass
+        if channel:
+            try:
+                await channel.send(start_text)
+            except discord.HTTPException:
+                pass
 
         await interaction.response.send_message(
             "تم إرسال نموذج رول اونر.",
@@ -131,13 +127,6 @@ class GvView(discord.ui.View):
             text
         )
 
-        start_text = self.start_role_text(interaction)
-
-        try:
-            await interaction.channel.send(start_text)
-        except discord.HTTPException:
-            pass
-
         await interaction.response.send_message(
             "تم إرسال نموذج رول بلاي GV.",
             ephemeral=True
@@ -149,13 +138,23 @@ class GvView(discord.ui.View):
         custom_id="gv_start"
     )
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
-        text = self.start_role_text(interaction)
-
-        await self.send_to_channels(
-            interaction,
-            GV_START_CHANNELS,
-            text
+        text = (
+            f"**__ بداية رولي ( {interaction.user.mention} )\n\n"
+            "- رول بلاي gv\n\n"
+            "- السرعه 70 ميل بالكيلو 110\n\n"
+            "- تكتب اسمك هنا #𝐀𝐍〢🎗️〕أضافة・الهوست  و تضيف الهوست\n\n"
+            "- تخرب بلوك\n\n"
+            f"|| <@&{GV_NOTIFY_ROLE_ID}> ||\n\n"
+            "__**"
         )
+
+        channel = interaction.guild.get_channel(1458141041772204123)
+
+        if channel:
+            try:
+                await channel.send(text)
+            except discord.HTTPException:
+                pass
 
         await interaction.response.send_message(
             "تم إرسال بداية الرول.",
