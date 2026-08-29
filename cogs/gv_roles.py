@@ -119,4 +119,5 @@ class GvRoles(commands.Cog):
                 await channel.send(embed=embed, view=GvView(self.bot))
 
 async def setup(bot):
+    bot.add_view(GvView(bot))
     await bot.add_cog(GvRoles(bot))
