@@ -93,4 +93,5 @@ class Violations(commands.Cog):
         await interaction.followup.send("تم إصدار المخالفة.", ephemeral=True)
 
 async def setup(bot):
+    bot.add_view(ViolationView())
     await bot.add_cog(Violations(bot))
