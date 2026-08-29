@@ -9,7 +9,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+# =========================
+# Health Server
+# =========================
+
 class HealthHandler(BaseHTTPRequestHandler):
+
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
@@ -31,43 +36,19 @@ def start_web_server():
     server.serve_forever()
 
 
-threading.Thread(target=start_web_server, daemon=True).start()
+threading.Thread(
+    target=start_web_server,
+    daemon=True
+).start()
 
+
+# =========================
+# Bot
+# =========================
 
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
-
-
-class MyBot(commands.Bot):
-    async def setup_hook(self):
-        for cog in COGS:
-            try:
-                await self.load_extension(cog)
-                print(f"Loaded {cog}")
-            except Exception as e:
-                print(f"Failed to load {cog}: {e}")
-
-        try:
-            guild = discord.Object(id=1441189523689312307)
-
-            self.tree.copy_global_to(guild=guild)
-
-            synced = await self.tree.sync(guild=guild)
-
-            print(
-                f"Synced {len(synced)} slash commands "
-                f"to guild {guild.id}."
-            )
-
-        except Exception as e:
-            print(f"Slash sync error: {type(e).__name__}: {e}")
-
-
-bot = MyBot(
-    command_prefix="!",
-    intents=intents
-)
 
 
 COGS = [
@@ -80,21 +61,126 @@ COGS = [
 ]
 
 
+class MyBot(commands.Bot):
+
+    async def setup_hook(self):
+
+        print("========== LOADING COGS ==========")
+
+        for cog in COGS:
+
+            try:
+                await self.load_extension(cog)
+
+                print(f"LOADED: {cog}")
+
+            except Exception as e:
+
+                print(
+                    f"FAILED: {cog} | "
+                    f"{type(e).__name__}: {e}"
+                )
+
+        print("========== COMMANDS BEFORE SYNC ==========")
+
+        commands_list = self.tree.get_commands()
+
+        print(
+            f"TOTAL COMMANDS: {len(commands_list)}"
+        )
+
+        for command in commands_list:
+
+            print(
+                f"COMMAND FOUND: /{command.name}"
+            )
+
+        print("========== STARTING GUILD SYNC ==========")
+
+        try:
+
+            guild = discord.Object(
+                id=1441189523689312307
+            )
+
+            synced = await self.tree.sync(
+                guild=guild
+            )
+
+            print(
+                f"SYNC SUCCESS: {len(synced)} commands"
+            )
+
+            for command in synced:
+
+                print(
+                    f"SYNCED COMMAND: /{command.name}"
+                )
+
+        except Exception as e:
+
+            print(
+                "SYNC ERROR: "
+                f"{type(e).__name__}: {e}"
+            )
+
+
+bot = MyBot(
+    command_prefix="!",
+    intents=intents
+)
+
+
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user} ({bot.user.id})")
 
+    print(
+        f"BOT ONLINE: "
+        f"{bot.user} ({bot.user.id})"
+    )
+
+    print(
+        "GUILD COUNT: "
+        f"{len(bot.guilds)}"
+    )
+
+    guild = bot.get_guild(
+        1441189523689312307
+    )
+
+    if guild:
+
+        print(
+            f"TARGET GUILD FOUND: "
+            f"{guild.name} ({guild.id})"
+        )
+
+    else:
+
+        print(
+            "TARGET GUILD NOT FOUND"
+        )
+
+
+# =========================
+# Start
+# =========================
 
 async def main():
+
     token = os.getenv("TOKEN")
 
-    if not token or token == "PUT_BOT_TOKEN_HERE":
-        raise RuntimeError("ضع TOKEN البوت داخل متغير TOKEN")
+    if not token:
+
+        raise RuntimeError(
+            "TOKEN environment variable is missing"
+        )
 
     await bot.start(token)
 
 
 if __name__ == "__main__":
+
     import asyncio
 
     asyncio.run(main())
