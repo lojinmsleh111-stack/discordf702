@@ -8,6 +8,8 @@ from utils.config import (
     IDENTITY_START,
 )
 
+IDENTITY_LOG_CHANNEL_ID = 1542702871135523026
+
 
 class Activation(commands.Cog):
     def __init__(self, bot):
@@ -25,7 +27,7 @@ class Activation(commands.Cog):
 
         username = message.content.strip()
 
-        # اسم Roblox فقط
+        # التأكد أن العضو أرسل اسم Roblox صحيح
         if (
             not username
             or len(username) > 32
@@ -52,10 +54,10 @@ class Activation(commands.Cog):
                 except discord.HTTPException:
                     pass
 
-        # الحصول على الرقم التالي
+        # الحصول على الهوية التالية
         number = await self._next_identity_number(message.guild)
 
-        # الزخرفة
+        # تغيير اسم العضو
         nickname = f"AN | {username} | {number}"
 
         try:
@@ -66,13 +68,13 @@ class Activation(commands.Cog):
         except discord.HTTPException:
             pass
 
-        # حذف رسالة العضو
+        # حذف رسالة العضو فقط
         try:
             await message.delete()
         except discord.HTTPException:
             pass
 
-        # إرسال القبول في الخاص فقط
+        # إرسال رسالة القبول للعضو بالخاص
         try:
             await member.send(
                 f"تم قبول تفعيلك ✅\n\n"
@@ -80,10 +82,22 @@ class Activation(commands.Cog):
                 f"هويتك: `{number}`"
             )
         except discord.Forbidden:
-            # الخاص مقفل عند العضو
             pass
         except discord.HTTPException:
             pass
+
+        # إرسال إشعار التفعيل في روم سجل التفعيل
+        log_channel = message.guild.get_channel(IDENTITY_LOG_CHANNEL_ID)
+
+        if log_channel:
+            try:
+                await log_channel.send(
+                    f"لقد تم تفعيل العضو\n\n"
+                    f": {member.mention}\n\n"
+                    f": {number}"
+                )
+            except discord.HTTPException:
+                pass
 
     async def _next_identity_number(self, guild: discord.Guild) -> int:
         used = set()
