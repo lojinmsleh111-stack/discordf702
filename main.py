@@ -1,4 +1,3 @@
-print("MAIN.PY IS RUNNING - TEST 123")
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -8,6 +7,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
+
+print("MAIN.PY IS RUNNING - TEST 123")
 
 
 # =========================
@@ -55,7 +56,6 @@ threading.Thread(
 # =========================
 
 intents = discord.Intents.default()
-
 intents.members = True
 intents.message_content = True
 
@@ -117,12 +117,37 @@ class MyBot(commands.Bot):
                 f"COMMAND FOUND: /{command.name}"
             )
 
+        # =========================
+        # Guild Slash Sync
+        # =========================
+
         print(
-            "========== GUILD SYNC =========="
+            "========== COPYING GLOBAL COMMANDS =========="
         )
 
         guild = discord.Object(
             id=1441189523689312307
+        )
+
+        try:
+
+            self.tree.copy_global_to(
+                guild=guild
+            )
+
+            print(
+                "GLOBAL COMMANDS COPIED TO GUILD"
+            )
+
+        except Exception as e:
+
+            print(
+                f"COPY ERROR: "
+                f"{type(e).__name__}: {e}"
+            )
+
+        print(
+            "========== GUILD SYNC =========="
         )
 
         try:
@@ -213,7 +238,9 @@ async def main():
             "TOKEN environment variable is missing"
         )
 
-    print("Starting Discord bot...")
+    print(
+        "Starting Discord bot..."
+    )
 
     await bot.start(token)
 
