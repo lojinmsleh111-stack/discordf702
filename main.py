@@ -85,44 +85,19 @@ class MyBot(commands.Bot):
         print("========== LOADING COGS ==========")
 
         for cog in COGS:
-
             try:
                 await self.load_extension(cog)
 
-                print(
-                    f"LOADED: {cog}"
-                )
+                print(f"LOADED: {cog}")
 
             except Exception as e:
-
                 print(
                     f"FAILED: {cog} | "
                     f"{type(e).__name__}: {e}"
                 )
 
         # =========================
-        # عرض الأوامر الحالية
-        # =========================
-
-        print(
-            "========== COMMANDS BEFORE SYNC =========="
-        )
-
-        commands_list = self.tree.get_commands()
-
-        print(
-            f"TOTAL COMMANDS: "
-            f"{len(commands_list)}"
-        )
-
-        for command in commands_list:
-
-            print(
-                f"COMMAND FOUND: /{command.name}"
-            )
-
-        # =========================
-        # السيرفر المستهدف
+        # Guild
         # =========================
 
         guild = discord.Object(
@@ -130,7 +105,50 @@ class MyBot(commands.Bot):
         )
 
         # =========================
-        # حذف Global Commands القديمة
+        # عرض الأوامر الموجودة
+        # =========================
+
+        print(
+            "========== COMMANDS LOADED =========="
+        )
+
+        current_commands = self.tree.get_commands()
+
+        print(
+            f"TOTAL COMMANDS: {len(current_commands)}"
+        )
+
+        for command in current_commands:
+            print(
+                f"COMMAND FOUND: /{command.name}"
+            )
+
+        # =========================
+        # نسخ الأوامر الحالية للسيرفر
+        # قبل تنظيف Global Commands
+        # =========================
+
+        print(
+            "========== COPYING COMMANDS TO GUILD =========="
+        )
+
+        try:
+            self.tree.copy_global_to(
+                guild=guild
+            )
+
+            print(
+                "✅ COMMANDS COPIED TO GUILD"
+            )
+
+        except Exception as e:
+            print(
+                f"❌ COPY ERROR: "
+                f"{type(e).__name__}: {e}"
+            )
+
+        # =========================
+        # حذف الأوامر Global القديمة
         # =========================
 
         print(
@@ -138,8 +156,6 @@ class MyBot(commands.Bot):
         )
 
         try:
-
-            # إزالة أي أوامر Global قديمة
             self.tree.clear_commands(
                 guild=None
             )
@@ -151,39 +167,13 @@ class MyBot(commands.Bot):
             )
 
         except Exception as e:
-
             print(
-                f"❌ GLOBAL COMMAND CLEAR ERROR: "
+                f"❌ GLOBAL CLEAR ERROR: "
                 f"{type(e).__name__}: {e}"
             )
 
         # =========================
-        # نسخ الأوامر الحالية للسيرفر
-        # =========================
-
-        print(
-            "========== COPYING COMMANDS TO GUILD =========="
-        )
-
-        try:
-
-            self.tree.copy_global_to(
-                guild=guild
-            )
-
-            print(
-                "✅ COMMANDS COPIED TO GUILD"
-            )
-
-        except Exception as e:
-
-            print(
-                f"❌ COPY ERROR: "
-                f"{type(e).__name__}: {e}"
-            )
-
-        # =========================
-        # Guild Sync
+        # مزامنة أوامر السيرفر
         # =========================
 
         print(
@@ -191,26 +181,23 @@ class MyBot(commands.Bot):
         )
 
         try:
-
             synced = await self.tree.sync(
                 guild=guild
             )
 
             print(
-                f"✅ SYNC SUCCESS: "
+                f"✅ GUILD SYNC SUCCESS: "
                 f"{len(synced)} commands"
             )
 
             for command in synced:
-
                 print(
                     f"SYNCED: /{command.name}"
                 )
 
         except Exception as e:
-
             print(
-                f"❌ SYNC ERROR: "
+                f"❌ GUILD SYNC ERROR: "
                 f"{type(e).__name__}: {e}"
             )
 
@@ -247,14 +234,11 @@ async def on_ready():
     )
 
     if guild:
-
         print(
             f"TARGET GUILD FOUND: "
             f"{guild.name} ({guild.id})"
         )
-
     else:
-
         print(
             "TARGET GUILD NOT FOUND"
         )
@@ -273,7 +257,6 @@ async def main():
     token = os.getenv("TOKEN")
 
     if not token:
-
         raise RuntimeError(
             "TOKEN environment variable is missing"
         )
