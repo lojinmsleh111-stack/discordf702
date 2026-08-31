@@ -100,6 +100,10 @@ class MyBot(commands.Bot):
                     f"{type(e).__name__}: {e}"
                 )
 
+        # =========================
+        # عرض الأوامر الحالية
+        # =========================
+
         print(
             "========== COMMANDS BEFORE SYNC =========="
         )
@@ -118,15 +122,47 @@ class MyBot(commands.Bot):
             )
 
         # =========================
-        # Guild Slash Sync
+        # السيرفر المستهدف
         # =========================
-
-        print(
-            "========== COPYING GLOBAL COMMANDS =========="
-        )
 
         guild = discord.Object(
             id=1441189523689312307
+        )
+
+        # =========================
+        # حذف Global Commands القديمة
+        # =========================
+
+        print(
+            "========== CLEARING OLD GLOBAL COMMANDS =========="
+        )
+
+        try:
+
+            # إزالة أي أوامر Global قديمة
+            self.tree.clear_commands(
+                guild=None
+            )
+
+            await self.tree.sync()
+
+            print(
+                "✅ OLD GLOBAL COMMANDS CLEARED"
+            )
+
+        except Exception as e:
+
+            print(
+                f"❌ GLOBAL COMMAND CLEAR ERROR: "
+                f"{type(e).__name__}: {e}"
+            )
+
+        # =========================
+        # نسخ الأوامر الحالية للسيرفر
+        # =========================
+
+        print(
+            "========== COPYING COMMANDS TO GUILD =========="
         )
 
         try:
@@ -136,15 +172,19 @@ class MyBot(commands.Bot):
             )
 
             print(
-                "GLOBAL COMMANDS COPIED TO GUILD"
+                "✅ COMMANDS COPIED TO GUILD"
             )
 
         except Exception as e:
 
             print(
-                f"COPY ERROR: "
+                f"❌ COPY ERROR: "
                 f"{type(e).__name__}: {e}"
             )
+
+        # =========================
+        # Guild Sync
+        # =========================
 
         print(
             "========== GUILD SYNC =========="
@@ -157,7 +197,7 @@ class MyBot(commands.Bot):
             )
 
             print(
-                f"SYNC SUCCESS: "
+                f"✅ SYNC SUCCESS: "
                 f"{len(synced)} commands"
             )
 
@@ -170,7 +210,7 @@ class MyBot(commands.Bot):
         except Exception as e:
 
             print(
-                f"SYNC ERROR: "
+                f"❌ SYNC ERROR: "
                 f"{type(e).__name__}: {e}"
             )
 
