@@ -218,7 +218,7 @@ class CodeModal(discord.ui.Modal, title="إرسال الكود"):
             await channel.send(
                 f"**__ الكود `{self.code.value}`\n\n"
                 "ضروري ترسل يوزرك ولا راح ابندك ..\n\n"
-                "@here\n\n"
+                "<@1441509033050767370>\n\n"
                 "__**"
             )
 
