@@ -6,15 +6,15 @@ from utils.config import VIOLATION_CHANNEL_ID
 
 
 # =========================================================
-# إيموجيات حالة المخالفة
+# IDs الإيموجيات
 # =========================================================
 
-UNPAID_EMOJI = "<:r_x:1540563530934390866>"
-PAID_EMOJI = "<:r_tick:1538664119136161823>"
+UNPAID_EMOJI_ID = 1540563530934390866
+PAID_EMOJI_ID = 1538664119136161823
 
 
 # =========================================================
-# نموذج المخالفة
+# إنشاء نص المخالفة
 # =========================================================
 
 def create_violation_text(
@@ -42,53 +42,112 @@ def create_violation_text(
 
 
 # =========================================================
-# إزالة حالة قديمة وإضافة الحالة الجديدة
+# جلب الإيموجي المخصص
+# =========================================================
+
+async def get_custom_emoji(
+    guild: discord.Guild,
+    emoji_id: int
+):
+    emoji = guild.get_emoji(emoji_id)
+
+    if emoji is not None:
+        return emoji
+
+    try:
+        return await guild.fetch_emoji(emoji_id)
+    except (
+        discord.NotFound,
+        discord.Forbidden,
+        discord.HTTPException
+    ):
+        return None
+
+
+# =========================================================
+# تغيير حالة السداد
 # =========================================================
 
 async def change_status(
     interaction: discord.Interaction,
-    new_emoji: str
+    emoji_id: int
 ):
-    thread = interaction.channel
-
-    if not isinstance(thread, discord.Thread):
+    if not isinstance(
+        interaction.channel,
+        discord.Thread
+    ):
         return await interaction.response.send_message(
-            "❌ الزر يعمل داخل Thread المخالفة فقط.",
+            "❌ اضغط الزر من داخل Thread المخالفة.",
             ephemeral=True
         )
 
-    if thread.parent is None or thread.message_id is None:
+    thread = interaction.channel
+
+    if (
+        thread.parent is None
+        or thread.message_id is None
+    ):
         return await interaction.response.send_message(
             "❌ لم أستطع العثور على رسالة المخالفة.",
             ephemeral=True
         )
 
+    if interaction.guild is None:
+        return await interaction.response.send_message(
+            "❌ تعذر تحديد السيرفر.",
+            ephemeral=True
+        )
+
     try:
+        # جلب رسالة المخالفة الأصلية
         message = await thread.parent.fetch_message(
             thread.message_id
         )
 
-        # إزالة الـ reactions القديمة
-        for reaction in message.reactions:
-            try:
-                if str(reaction.emoji) in (
-                    UNPAID_EMOJI,
-                    PAID_EMOJI
-                ):
-                    await reaction.remove(
-                        self_user=True
-                    )
-            except (
-                discord.Forbidden,
-                discord.HTTPException
-            ):
-                pass
+        # جلب الإيموجي الجديد
+        new_emoji = await get_custom_emoji(
+            interaction.guild,
+            emoji_id
+        )
 
-        # إضافة الحالة الجديدة كـ Reaction
-        try:
-            await message.add_reaction(new_emoji)
-        except discord.HTTPException:
-            pass
+        if new_emoji is None:
+            return await interaction.response.send_message(
+                "❌ الإيموجي المطلوب غير موجود في السيرفر أو البوت لا يستطيع استخدامه.",
+                ephemeral=True
+            )
+
+        # جلب مستخدم البوت
+        bot_user = interaction.client.user
+
+        # إزالة Reaction الحالة السابقة من البوت فقط
+        if bot_user is not None:
+            for reaction in message.reactions:
+
+                if not isinstance(
+                    reaction.emoji,
+                    discord.Emoji
+                ):
+                    continue
+
+                if reaction.emoji.id in (
+                    UNPAID_EMOJI_ID,
+                    PAID_EMOJI_ID
+                ):
+                    try:
+                        await reaction.remove(
+                            bot_user
+                        )
+                    except (
+                        discord.NotFound,
+                        discord.Forbidden,
+                        discord.HTTPException
+                    ):
+                        pass
+
+        # إضافة الحالة الجديدة
+        await message.add_reaction(
+            new_emoji
+        )
 
         await interaction.response.send_message(
             "✅ تم تحديث حالة المخالفة.",
@@ -96,22 +155,25 @@ async def change_status(
         )
 
     except discord.Forbidden:
-        await interaction.response.send_message(
-            "❌ البوت لا يملك صلاحية تعديل المخالفة.",
-            ephemeral=True
-        )
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                "❌ البوت لا يملك صلاحيات تعديل حالة المخالفة.",
+                ephemeral=True
+            )
 
     except discord.NotFound:
-        await interaction.response.send_message(
-            "❌ لم أستطع العثور على رسالة المخالفة.",
-            ephemeral=True
-        )
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                "❌ لم أستطع العثور على رسالة المخالفة.",
+                ephemeral=True
+            )
 
-    except discord.HTTPException:
-        await interaction.response.send_message(
-            "❌ حدث خطأ أثناء تحديث المخالفة.",
-            ephemeral=True
-        )
+    except discord.HTTPException as e:
+        if not interaction.response.is_done():
+            await interaction.response.send_message(
+                f"❌ حدث خطأ أثناء تحديث المخالفة: {e}",
+                ephemeral=True
+            )
 
 
 # =========================================================
@@ -121,7 +183,9 @@ async def change_status(
 class ViolationView(discord.ui.View):
 
     def __init__(self):
-        super().__init__(timeout=None)
+        super().__init__(
+            timeout=None
+        )
 
     @discord.ui.button(
         label="تم السداد",
@@ -135,7 +199,7 @@ class ViolationView(discord.ui.View):
     ):
         await change_status(
             interaction,
-            PAID_EMOJI
+            PAID_EMOJI_ID
         )
 
     @discord.ui.button(
@@ -150,7 +214,7 @@ class ViolationView(discord.ui.View):
     ):
         await change_status(
             interaction,
-            UNPAID_EMOJI
+            UNPAID_EMOJI_ID
         )
 
 
@@ -203,6 +267,39 @@ class Violations(commands.Cog):
             )
 
         # =====================================================
+        # التحقق من الدليل الأساسي
+        # =====================================================
+
+        if (
+            evidence.content_type is None
+            or not evidence.content_type.startswith(
+                "image/"
+            )
+        ):
+            return await interaction.followup.send(
+                "❌ الدليل الأساسي يجب أن يكون صورة.",
+                ephemeral=True
+            )
+
+        # =====================================================
+        # التحقق من الدليل الإضافي
+        # =====================================================
+
+        if (
+            extra_evidence is not None
+            and (
+                extra_evidence.content_type is None
+                or not extra_evidence.content_type.startswith(
+                    "image/"
+                )
+            )
+        ):
+            return await interaction.followup.send(
+                "❌ الدليل الإضافي يجب أن يكون صورة.",
+                ephemeral=True
+            )
+
+        # =====================================================
         # جلب رومات المخالفات
         # =====================================================
 
@@ -219,7 +316,9 @@ class Violations(commands.Cog):
         for channel_id in channel_ids:
 
             try:
-                channel_id = int(channel_id)
+                channel_id = int(
+                    channel_id
+                )
             except (
                 TypeError,
                 ValueError
@@ -258,39 +357,6 @@ class Violations(commands.Cog):
             )
 
         # =====================================================
-        # التحقق من الدليل الأساسي
-        # =====================================================
-
-        if (
-            evidence.content_type is None
-            or not evidence.content_type.startswith(
-                "image/"
-            )
-        ):
-            return await interaction.followup.send(
-                "❌ الدليل الأساسي يجب أن يكون صورة.",
-                ephemeral=True
-            )
-
-        # =====================================================
-        # التحقق من الدليل الإضافي
-        # =====================================================
-
-        if (
-            extra_evidence is not None
-            and (
-                extra_evidence.content_type is None
-                or not extra_evidence.content_type.startswith(
-                    "image/"
-                )
-            )
-        ):
-            return await interaction.followup.send(
-                "❌ الدليل الإضافي يجب أن يكون صورة.",
-                ephemeral=True
-            )
-
-        # =====================================================
         # إنشاء نص المخالفة
         # =====================================================
 
@@ -307,17 +373,15 @@ class Violations(commands.Cog):
         sent_messages = []
 
         # =====================================================
-        # إرسال المخالفة
+        # إرسال المخالفة للرومات
         # =====================================================
 
         for channel in channels:
 
             try:
 
-                # مهم:
-                # لا يوجد file=
-                # ولا يوجد إرسال للصورة كملف.
-                # الرابط فقط موجود داخل الرسالة.
+                # إرسال النص فقط
+                # الصور لن يتم إرسالها كملفات
                 message = await channel.send(
                     content=violation_text,
                     allowed_mentions=discord.AllowedMentions(
@@ -325,21 +389,29 @@ class Violations(commands.Cog):
                     )
                 )
 
-                sent_messages.append(message)
+                sent_messages.append(
+                    message
+                )
 
                 # =================================================
-                # إضافة ❌ كـ Reaction
+                # إضافة حالة "لم يتم السداد" تلقائياً
                 # =================================================
 
-                try:
-                    await message.add_reaction(
-                        UNPAID_EMOJI
-                    )
-                except (
-                    discord.Forbidden,
-                    discord.HTTPException
-                ):
-                    pass
+                unpaid_emoji = await get_custom_emoji(
+                    interaction.guild,
+                    UNPAID_EMOJI_ID
+                )
+
+                if unpaid_emoji is not None:
+                    try:
+                        await message.add_reaction(
+                            unpaid_emoji
+                        )
+                    except (
+                        discord.Forbidden,
+                        discord.HTTPException
+                    ):
+                        pass
 
                 # =================================================
                 # إنشاء Thread
@@ -376,7 +448,6 @@ class Violations(commands.Cog):
         # =====================================================
 
         if not sent_messages:
-
             return await interaction.followup.send(
                 "❌ لم أستطع إرسال المخالفة إلى أي روم.\n\n"
                 "تأكد من صلاحيات البوت:\n"
@@ -389,12 +460,41 @@ class Violations(commands.Cog):
             )
 
         # =====================================================
-        # لا يوجد إرسال بالخاص
+        # إرسال المخالفة للخاص
+        # مرة واحدة فقط وبدون ملفات صور
+        # =====================================================
+
+        try:
+
+            await violator.send(
+                content=violation_text,
+                allowed_mentions=discord.AllowedMentions(
+                    users=False
+                )
+            )
+
+            dm_status = (
+                "وتم إرسالها للخاص."
+            )
+
+        except (
+            discord.Forbidden,
+            discord.HTTPException
+        ):
+
+            dm_status = (
+                "لكن تعذر إرسالها للخاص "
+                "(قد تكون الرسائل الخاصة مقفلة)."
+            )
+
+        # =====================================================
+        # تأكيد العملية للعسكري
         # =====================================================
 
         await interaction.followup.send(
-            "✅ تم إصدار المخالفة وإرسالها إلى "
-            f"{len(sent_messages)} روم.",
+            f"✅ تم إصدار المخالفة وإرسالها إلى "
+            f"{len(sent_messages)} روم، "
+            f"{dm_status}",
             ephemeral=True
         )
 
