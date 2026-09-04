@@ -9,11 +9,14 @@ from discord.ext import commands
 from utils.config import (
     ACTIVATION_CHANNELS,
     ACTIVATION_ROLE_IDS,
-    IDENTITY_START,
 )
 
 IDENTITY_LOG_CHANNEL_ID = 1542702871135523026
 
+# أول هوية
+IDENTITY_START = 1172
+
+# ملف حفظ العداد
 IDENTITY_FILE = "identity_counter.json"
 
 
@@ -21,19 +24,30 @@ class Activation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.identity_lock = asyncio.Lock()
+        self.identity_number = None
 
     def _load_counter(self):
+        if self.identity_number is not None:
+            return self.identity_number
+
         if not os.path.exists(IDENTITY_FILE):
-            return IDENTITY_START
+            self.identity_number = IDENTITY_START
+            return self.identity_number
 
         try:
             with open(IDENTITY_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            return int(data.get("last_id", IDENTITY_START - 1)) + 1
+            last_id = int(data.get("last_id", IDENTITY_START - 1))
+
+            # يمنع الرجوع لأقل من 1172
+            self.identity_number = max(last_id + 1, IDENTITY_START)
+
+            return self.identity_number
 
         except (ValueError, TypeError, json.JSONDecodeError, OSError):
-            return IDENTITY_START
+            self.identity_number = IDENTITY_START
+            return self.identity_number
 
     def _save_counter(self, number):
         temp_file = IDENTITY_FILE + ".tmp"
@@ -47,6 +61,9 @@ class Activation(commands.Cog):
             )
 
         os.replace(temp_file, IDENTITY_FILE)
+
+        # الرقم التالي
+        self.identity_number = number + 1
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -93,11 +110,9 @@ class Activation(commands.Cog):
                 except discord.HTTPException:
                     pass
 
-        # الحصول على ID جديد بشكل آمن
+        # الحصول على هوية جديدة
         async with self.identity_lock:
-
             number = self._load_counter()
-
             self._save_counter(number)
 
         # تغيير اسم العضو
@@ -111,7 +126,7 @@ class Activation(commands.Cog):
         except discord.HTTPException:
             pass
 
-        # حذف رسالة العضو فقط
+        # حذف رسالة العضو
         try:
             await message.delete()
         except discord.HTTPException:
@@ -137,7 +152,6 @@ class Activation(commands.Cog):
         )
 
         if log_channel:
-
             try:
                 await log_channel.send(
                     f"لقد تم تفعيل العضو\n\n"
